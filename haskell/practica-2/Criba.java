@@ -1,6 +1,3 @@
-// import java.util.ArrayList;
-// import java.util.List;
-
 public class Criba {
 	public static void main(String[] args) {
         int n = Integer.parseInt(args[0]);

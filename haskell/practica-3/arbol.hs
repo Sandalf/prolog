@@ -16,7 +16,7 @@ test = Nodo 'a' [(Nodo 'b' []), (Nodo 'c' [(Nodo 'e' []), (Nodo 'f' [(Nodo 'g' [
 ---- d
 
 --Comprpobacion si un nodo es hoja
-esHoja :: Arbol a-> Bool
+esHoja :: Arbol a -> Bool
 esHoja (Nodo _ []) = True 
 esHoja _ = False
 
@@ -38,10 +38,10 @@ altura :: Arbol a -> Int
 altura (Nodo _ []) = 0
 altura (Nodo _ lis) = 1 + maxlis (map altura lis)
 
-{-- Profundidad de un arbol 
+-- Profundidad de un arbol 
 profundidad :: Arbol a -> Int
 profundidad (Nodo _ []) = 0
-profundidad (Nodo _ lis) = 1 + maxlis(map altura lis) -}
+profundidad (Nodo _ lis) = 1 + maxlis (map profundidad lis)
 
 --concatena una lista
 aplanar :: [[a]] -> [a]
@@ -59,7 +59,7 @@ postorden (Nodo x []) = [x]
 postorden (Nodo x lis) = (aplanar (map postorden lis)) ++ [x]
 
 --niveles
-niveles :: Arbol a-> [a]
+niveles :: Arbol a -> [a]
 niveles a = nivcol [a] where
     nivcol [] = []
     nivcol ((Nodo x lis):res) = x : nivcol (res ++ lis)
@@ -67,3 +67,17 @@ niveles a = nivcol [a] where
 -- número de nodos
 numNodos :: Arbol a -> Int
 numNodos x = length (preorden x)
+
+-- número de hojas
+-- numHojasHelper :: Arbol a -> Int -> Int
+-- numHojasHelper (Nodo x []) n = n
+-- numHojasHelper (Nodo x lis) n = numHojasHelper lis (if lis == [] then n + 1 else n)
+
+aplanarNums :: [[a]] -> Int
+aplanarNums [] = []
+aplanarNums lis = foldl1 (++) lis
+
+numHojas :: Arbol a -> Int
+numHojas (Nodo x []) = 1
+numHojas (Nodo x lis) = map numHojas lis
+-- numHojas x = numHojasHelper x 0s

@@ -45,10 +45,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 
 func calculate(a float64, b float64, c float64) (float64, float64) {
 	sqrt := math.Sqrt(math.Pow(b, 2) - (4 * a * c))
-	fmt.Println("sqrt", sqrt)
 	x1 := (-1*b + sqrt) / (2 * a)
 	x2 := (-1*b - sqrt) / (2 * a)
-	fmt.Printf("x1 = %.2f\n", x1)
-	fmt.Printf("x2 = %.2f\n", x2)
 	return x1, x2
 }

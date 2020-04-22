@@ -4,16 +4,11 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"strconv"
 	"text/template"
 
 	_ "github.com/go-sql-driver/mysql"
 )
-
-type Employee struct {
-	Id   int
-	Name string
-	City string
-}
 
 type Product struct {
 	Id    int
@@ -69,74 +64,53 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 }
 
-func Show(w http.ResponseWriter, r *http.Request) {
-	db := dbConn()
-	nId := r.URL.Query().Get("id")
-	selDB, err := db.Query("SELECT * FROM employee WHERE id=?", nId)
-	if err != nil {
-		panic(err.Error())
-	}
-	emp := Employee{}
-	for selDB.Next() {
-		var id int
-		var name, city string
-		err = selDB.Scan(&id, &name, &city)
-		if err != nil {
-			panic(err.Error())
-		}
-		emp.Id = id
-		emp.Name = name
-		emp.City = city
-	}
-	tmpl.ExecuteTemplate(w, "Show", emp)
-	defer db.Close()
-}
-
-func New(w http.ResponseWriter, r *http.Request) {
-	tmpl.ExecuteTemplate(w, "New", nil)
-	// tmpl.ExecuteTemplate(w, "Carrito", nil)
-}
-
-func Edit(w http.ResponseWriter, r *http.Request) {
-	db := dbConn()
-	nId := r.URL.Query().Get("id")
-	selDB, err := db.Query("SELECT * FROM employee WHERE id=?", nId)
-	if err != nil {
-		panic(err.Error())
-	}
-	emp := Employee{}
-	for selDB.Next() {
-		var id int
-		var name, city string
-		err = selDB.Scan(&id, &name, &city)
-		if err != nil {
-			panic(err.Error())
-		}
-		emp.Id = id
-		emp.Name = name
-		emp.City = city
-	}
-	tmpl.ExecuteTemplate(w, "Edit", emp)
-	defer db.Close()
-}
-
 func Insert(w http.ResponseWriter, r *http.Request) {
 	db := dbConn()
 	if r.Method == "POST" {
-		name := r.FormValue("name")
-		city := r.FormValue("city")
-		insForm, err := db.Prepare("INSERT INTO Employee(name, city) VALUES(?,?)")
+		productID := r.FormValue("uid")
+
+		selDB, err := db.Query("SELECT * FROM cart WHERE productId=?", productID)
+
 		if err != nil {
 			panic(err.Error())
 		}
-		insForm.Exec(name, city)
-		log.Println("INSERT: Name: " + name + " | City: " + city)
+
+		count := 0
+
+		for selDB.Next() {
+			count++
+		}
+
+		log.Println("Count: " + strconv.Itoa(count))
+
+		strQuery := ""
+		if count == 0 {
+			strQuery = "INSERT INTO cart(productID, amount) VALUES(?,?)"
+			insForm, err := db.Prepare(strQuery)
+
+			if err != nil {
+				panic(err.Error())
+			}
+
+			insForm.Exec(productID, 1)
+		} else {
+			strQuery = "UPDATE cart SET amount = amount + 1 WHERE productId = ?"
+			insForm, err := db.Prepare(strQuery)
+
+			if err != nil {
+				panic(err.Error())
+			}
+
+			insForm.Exec(productID)
+		}
+
+		log.Println("INSERT: ProductId: " + productID)
 	}
 	defer db.Close()
 	http.Redirect(w, r, "/", 301)
 }
 
-func Add(w http.ResponseWriter, r *http.Request) {
+func Update(w http.ResponseWriter, r *http.Request) {
 	db := dbConn()
 	if r.Method == "POST" {
 		amount := r.FormValue("amount")
@@ -152,34 +126,17 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/carrito", 301)
 }
 
-func Update(w http.ResponseWriter, r *http.Request) {
-	db := dbConn()
-	if r.Method == "POST" {
-		name := r.FormValue("name")
-		city := r.FormValue("city")
-		id := r.FormValue("uid")
-		insForm, err := db.Prepare("UPDATE Employee SET name=?, city=? WHERE id=?")
-		if err != nil {
-			panic(err.Error())
-		}
-		insForm.Exec(name, city, id)
-		log.Println("UPDATE: Name: " + name + " | City: " + city)
-	}
-	defer db.Close()
-	http.Redirect(w, r, "/", 301)
-}
-
 func Delete(w http.ResponseWriter, r *http.Request) {
 	db := dbConn()
 	emp := r.URL.Query().Get("id")
-	delForm, err := db.Prepare("DELETE FROM employee WHERE id=?")
+	delForm, err := db.Prepare("DELETE FROM cart WHERE id=?")
 	if err != nil {
 		panic(err.Error())
 	}
 	delForm.Exec(emp)
 	log.Println("DELETE")
 	defer db.Close()
-	http.Redirect(w, r, "/", 301)
+	http.Redirect(w, r, "/carrito", 301)
 }
 
 func Carrito(w http.ResponseWriter, r *http.Request) {
@@ -226,13 +183,9 @@ func main() {
 	log.Println("Server started on: http://localhost:8080")
 
 	http.HandleFunc("/", Index)
-	http.HandleFunc("/show", Show)
-	http.HandleFunc("/new", New)
-	http.HandleFunc("/edit", Edit)
 	http.HandleFunc("/insert", Insert)
 	http.HandleFunc("/update", Update)
 	http.HandleFunc("/delete", Delete)
 	http.HandleFunc("/carrito", Carrito)
-	http.HandleFunc("/add", Add)
 	http.ListenAndServe(":8080", nil)
 }

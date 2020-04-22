@@ -1,7 +1,15 @@
 {{ define "Menu" }}
-<div class="container">
-    <a href="/">Inicio</a> | 
-    <a href="/new">Nuevo</a> |
-    <a href="/carrito">Carrito</a>
-</div>
+<nav class="navbar navbar-white bg-white mb-3">
+    <div class="container">
+        <a class="navbar-brand" href="/">Supermercado</a>
+        <ul class="nav">
+            <li class="nav-item">
+                <a class="nav-link active" href="/">Inicio</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/carrito">Carrito</a>
+            </li>
+        </ul>
+    </div>
+</nav>
 {{ end }}

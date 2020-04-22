@@ -6,13 +6,7 @@
       <div class="row">
       {{ range . }}
         <div class="col col-12 col-md-3">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title text-uppercase">{{ .Name }}</h5>
-              <h6 class="card-subtitle mb-2 text-muted">${{ .Price }}</h6>              
-              <a href="#" class="card-link">Agregar al carrito</a>
-            </div>
-          </div>
+          {{ template "Product" . }}
         </div>
       {{ end }}
       </div>

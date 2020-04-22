@@ -3,14 +3,13 @@
     {{ template "Menu"  }}
     <div class="container">
       <h2>Carrito</h2>
-      <table class="table table-striped" border="1">
+      <table class="table table-striped bg-white" border="1">
         <thead>
           <tr>
             <th>Nombre</th>
             <th>Precio unitario</th>
             <th>Cantidad</th>
             <th>Total</th>
-            <th>Ver</th>
             <th>Borrar</th>
           </tr>
         </thead>
@@ -20,14 +19,13 @@
           <td> {{ .Product.Name }} </td>
           <td> ${{ .Product.Price }} </td> 
           <td>
-            <form method="POST" action="add">
+            <form method="POST" action="update">
               <input type="hidden" name="uid" value="{{ .Id }}" />
               <input name="amount" value="{{ .Amount }}"/>
               <input class="btn btn-primary" type="submit" value="Guardar" />
             </form>
           </td> 
-          <td> ${{ .Total }} </td>           
-          <td><a href="/show?id={{ .Product.Id }}">Ver</a></td>
+          <td> ${{ .Total }} </td>
           <td><a href="/delete?id={{ .Id }}">Borrar</a></td>
         </tr>
       {{ end }}

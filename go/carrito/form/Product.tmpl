@@ -1,0 +1,12 @@
+{{ define "Product" }}
+<div class="card shadow">
+    <div class="card-body">
+        <h5 class="card-title text-uppercase">{{ .Name }}</h5>
+        <h6 class="card-subtitle mb-2 text-muted">${{ .Price }}</h6>
+        <form method="POST" action="insert">
+            <input type="hidden" name="uid" value="{{ .Id }}" />
+            <input class="btn btn-link p-0" type="submit" value="Agregar al carrito" />
+        </form>
+    </div>
+</div>
+{{ end }}

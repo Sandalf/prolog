@@ -15,6 +15,19 @@ type Employee struct {
 	City string
 }
 
+type Product struct {
+	Id    int
+	Name  string
+	Price float32
+}
+
+type ShoppingCartItem struct {
+	Id      int
+	Product Product
+	Amount  int
+	Total   float32
+}
+
 func dbConn() (db *sql.DB) {
 	dbDriver := "mysql"
 	dbUser := "root"
@@ -32,24 +45,25 @@ var tmpl = template.Must(template.ParseGlob("form/*"))
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	db := dbConn()
-	selDB, err := db.Query("SELECT * FROM Employee ORDER BY id DESC")
+	selDB, err := db.Query("SELECT * FROM products ORDER BY id ASC")
 	print(selDB)
 	if err != nil {
 		panic(err.Error())
 	}
-	emp := Employee{}
-	res := []Employee{}
+	prod := Product{}
+	res := []Product{}
 	for selDB.Next() {
 		var id int
-		var name, city string
-		err = selDB.Scan(&id, &name, &city)
+		var name string
+		var price float32
+		err = selDB.Scan(&id, &name, &price)
 		if err != nil {
 			panic(err.Error())
 		}
-		emp.Id = id
-		emp.Name = name
-		emp.City = city
-		res = append(res, emp)
+		prod.Id = id
+		prod.Name = name
+		prod.Price = price
+		res = append(res, prod)
 	}
 	tmpl.ExecuteTemplate(w, "Index", res)
 	defer db.Close()
@@ -80,6 +94,7 @@ func Show(w http.ResponseWriter, r *http.Request) {
 
 func New(w http.ResponseWriter, r *http.Request) {
 	tmpl.ExecuteTemplate(w, "New", nil)
+	// tmpl.ExecuteTemplate(w, "Carrito", nil)
 }
 
 func Edit(w http.ResponseWriter, r *http.Request) {
@@ -121,6 +136,22 @@ func Insert(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", 301)
 }
 
+func Add(w http.ResponseWriter, r *http.Request) {
+	db := dbConn()
+	if r.Method == "POST" {
+		amount := r.FormValue("amount")
+		id := r.FormValue("uid")
+		insForm, err := db.Prepare("UPDATE cart SET amount = ? WHERE id = ?")
+		if err != nil {
+			panic(err.Error())
+		}
+		insForm.Exec(amount, id)
+		log.Println("UPDATE: CartId: " + id)
+	}
+	defer db.Close()
+	http.Redirect(w, r, "/carrito", 301)
+}
+
 func Update(w http.ResponseWriter, r *http.Request) {
 	db := dbConn()
 	if r.Method == "POST" {
@@ -151,8 +182,49 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", 301)
 }
 
+func Carrito(w http.ResponseWriter, r *http.Request) {
+	db := dbConn()
+	selDB, err := db.Query("SELECT cart.id, cart.amount, products.id as productID, products.name, products.price FROM cart INNER JOIN products ON cart.productId = products.id")
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	prod := Product{}
+	shoppingCartItem := ShoppingCartItem{}
+	res := []ShoppingCartItem{}
+
+	for selDB.Next() {
+		var id int
+		var amount int
+		var productID int
+		var name string
+		var price float32
+		err = selDB.Scan(&id, &amount, &productID, &name, &price)
+
+		if err != nil {
+			panic(err.Error())
+		}
+
+		prod.Id = id
+		prod.Name = name
+		prod.Price = price
+
+		shoppingCartItem.Id = id
+		shoppingCartItem.Amount = amount
+		shoppingCartItem.Product = prod
+		shoppingCartItem.Total = float32(amount) * price
+
+		res = append(res, shoppingCartItem)
+	}
+
+	tmpl.ExecuteTemplate(w, "Carrito", res)
+	defer db.Close()
+}
+
 func main() {
 	log.Println("Server started on: http://localhost:8080")
+
 	http.HandleFunc("/", Index)
 	http.HandleFunc("/show", Show)
 	http.HandleFunc("/new", New)
@@ -160,5 +232,7 @@ func main() {
 	http.HandleFunc("/insert", Insert)
 	http.HandleFunc("/update", Update)
 	http.HandleFunc("/delete", Delete)
+	http.HandleFunc("/carrito", Carrito)
+	http.HandleFunc("/add", Add)
 	http.ListenAndServe(":8080", nil)
 }

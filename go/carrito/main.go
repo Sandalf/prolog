@@ -179,6 +179,20 @@ func Carrito(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 }
 
+func Seeder() {
+	db := dbConn()
+
+	_, err := db.Query(`
+		INSERT INTO cart(name, price) VALUES('agua',10);
+	`)
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	defer db.Close()
+}
+
 func main() {
 	log.Println("Server started on: http://localhost:8080")
 
